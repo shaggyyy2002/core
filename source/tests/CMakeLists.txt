@@ -53,8 +53,8 @@ if(OPTION_TEST_MEMORYCHECK AND (OPTION_BUILD_ADDRESS_SANITIZER OR OPTION_BUILD_T
 endif()
 
 if(OPTION_TEST_MEMORYCHECK AND NOT (OPTION_BUILD_ADDRESS_SANITIZER OR OPTION_BUILD_THREAD_SANITIZER OR OPTION_BUILD_MEMORY_SANITIZER))
-	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --leak-check=full")
 	# set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --show-leak-kinds=all")
+	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --leak-check=full")
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --trace-children=yes")
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --show-reachable=yes")
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --track-origins=yes")
@@ -64,6 +64,11 @@ if(OPTION_TEST_MEMORYCHECK AND NOT (OPTION_BUILD_ADDRESS_SANITIZER OR OPTION_BUI
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck/valgrind-python.supp")
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck/valgrind-node.supp")
 	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck/valgrind-wasm.supp")
+	set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=${CMAKE_CURRENT_SOURCE_DIR}/memcheck/valgrind-wasm.supp")
+
+	# TODO: Implement automatic detection for valgrind suppressions and create a proper test suite for the CI
+	# set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=/usr/lib/valgrind/python3.supp")
+	# set(MEMORYCHECK_COMMAND_OPTIONS "${MEMORYCHECK_COMMAND_OPTIONS} --suppressions=/usr/lib/valgrind/debian.supp")
 
 	# TODO: Memory check does not work properly with CoreCLR
 	#
@@ -87,6 +92,12 @@ if(OPTION_TEST_MEMORYCHECK AND NOT (OPTION_BUILD_ADDRESS_SANITIZER OR OPTION_BUI
 			--test-action memcheck
 			--timeout 7200
 		COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_BINARY_DIR}/Testing/Temporary/MemoryChecker.*.log"
+	)
+
+	# This is needed in order to allow valgrind to properly track malloc in Python
+	set(TESTS_ENVIRONMENT_VARIABLES
+		${TESTS_ENVIRONMENT_VARIABLES}
+		"PYTHONMALLOC=malloc"
 	)
 endif()
 
@@ -150,6 +161,7 @@ add_subdirectory(metacall_node_fail_load_leak_test)
 add_subdirectory(metacall_node_typescript_test)
 add_subdirectory(metacall_node_python_async_after_destroy_test)
 add_subdirectory(metacall_node_python_await_test)
+add_subdirectory(metacall_node_python_await_extended_test)
 add_subdirectory(metacall_node_python_exception_test)
 add_subdirectory(metacall_node_clear_mem_test)
 add_subdirectory(metacall_node_async_resources_test)
@@ -190,9 +202,9 @@ add_subdirectory(metacall_python_relative_path_test)
 add_subdirectory(metacall_python_without_functions_test)
 add_subdirectory(metacall_python_builtins_test)
 add_subdirectory(metacall_python_async_test)
-# TODO: add_subdirectory(metacall_python_await_test)
+# TODO: add_subdirectory(metacall_python_await_test) # TODO: Implement metacall_await in Python Port
 add_subdirectory(metacall_python_exception_test)
-# TODO: add_subdirectory(metacall_python_node_await_test)
+# TODO: add_subdirectory(metacall_python_node_await_test) # TODO: Implement metacall_await in Python Port
 add_subdirectory(metacall_python_without_env_vars_test)
 add_subdirectory(metacall_map_test)
 add_subdirectory(metacall_map_await_test)
